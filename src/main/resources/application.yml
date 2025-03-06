@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: auth-service
+
+  access-token-validity-in-seconds: 1800
+  refresh-token-validity-in-seconds: 1209600
