@@ -40,4 +40,6 @@ public class User {
     @Column(name = "role")
     private Set<String> roles = new HashSet<>();
 
+    @Column(name = "subscription_status")
+    private String subscriptionStatus;
 }

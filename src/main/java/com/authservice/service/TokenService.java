@@ -1,51 +1,35 @@
 package com.authservice.service;
 
 import com.authservice.entity.User;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import com.authservice.jwt.JwtTokenProvider;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
 
 @Service
+@RequiredArgsConstructor
 public class TokenService {
 
-    private final String jwtSecret = "yourSecretKey";
-    private final long accessTokenValidity = 15 * 60 * 1000;
-    private final long refreshTokenValidity = 7 * 24 * 60 * 60 * 1000;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    public String generateAccessToken(User user) {
-        return Jwts.builder()
-                .setSubject(user.getUserId())
-                .claim("roles", user.getRoles())
-//                .claim("subscription", user.getSubscriptionStatus())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + accessTokenValidity))
-                .signWith(SignatureAlgorithm.HS512, jwtSecret)
-                .compact();
+    public String createAccessToken(User user) {
+        return jwtTokenProvider.generateAccessToken(user);
     }
 
-    public String generateRefreshToken(User user) {
-        return Jwts.builder()
-                .setSubject(user.getUserId())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + refreshTokenValidity))
-                .signWith(SignatureAlgorithm.HS512, jwtSecret)
-                .compact();
+    public String createRefreshToken(User user) {
+        return jwtTokenProvider.generateRefreshToken(user);
     }
 
     public boolean validateToken(String token) {
-        try {
-            Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token);
-            return true;
-        } catch (Exception ex) {
-            return false;
-        }
+        return jwtTokenProvider.validateToken(token);
     }
 
-    public String getUsernameFromToken(String token) {
-        return Jwts.parser().setSigningKey(jwtSecret)
-                .parseClaimsJws(token)
-                .getBody().getSubject();
+    public String getUsername(String token) {
+        return jwtTokenProvider.getUserIdFromToken(token);
+    }
+
+    public Date getExpiration(String token) {
+        return jwtTokenProvider.getExpiration(token);
     }
 }

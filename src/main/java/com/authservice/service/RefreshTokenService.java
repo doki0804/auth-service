@@ -1,28 +1,30 @@
 package com.authservice.service;
 
+import com.authservice.jwt.JwtTokenProvider;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 @Service
+@RequiredArgsConstructor
 public class RefreshTokenService {
 
     private final RedisTemplate<String, String> redisTemplate;
-    private final long refreshTokenValiditySeconds = 7 * 24 * 60 * 60;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    public RefreshTokenService(RedisTemplate<String, String> redisTemplate) {
-        this.redisTemplate = redisTemplate;
-    }
-
-    public void saveRefreshToken(String userId, String refreshToken) {
-        String key = "refresh:" + userId;
+    public void saveRefreshToken(String accessToken, String refreshToken) {
+        String key = "refresh:" + accessToken;
+        Date tokenExpiration = jwtTokenProvider.getExpiration(refreshToken);
+        long refreshTokenValiditySeconds = tokenExpiration.getTime() / 1000;
         redisTemplate.opsForValue().set(key, refreshToken, refreshTokenValiditySeconds, TimeUnit.SECONDS);
     }
 
     // Redis에서 refresh token 조회
-    public String getRefreshToken(String userId) {
-        String key = "refresh:" + userId;
+    public String getRefreshToken(String accessToken) {
+        String key = "refresh:" + accessToken;
         return redisTemplate.opsForValue().get(key);
     }
 
